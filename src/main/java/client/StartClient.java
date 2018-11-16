@@ -27,6 +27,8 @@ public class StartClient {
 
             sysOut.write("asd".getBytes());
             sysOut.flush();
+
+
         } catch (ConnectException e) {
             System.out.println("Failed to connect to server. Is it running?");
         } catch (UnknownHostException e) {
