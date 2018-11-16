@@ -1,4 +1,4 @@
-package client;
+package com.messenger.client;
 
 public class ServerConnection {
 }

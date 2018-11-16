@@ -1,6 +1,6 @@
-package client;
+package com.messenger.client;
 
-import common.Message;
+import com.messenger.common.Message;
 
 public class UserInterface {
 

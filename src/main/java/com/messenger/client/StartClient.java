@@ -1,11 +1,11 @@
-package client;
+package com.messenger.client;
+
+import com.messenger.common.Message;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.Socket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 
 public class StartClient {
@@ -26,6 +26,7 @@ public class StartClient {
             BufferedOutputStream sysOut = new BufferedOutputStream(System.out);
 
             sysOut.write("asd".getBytes());
+            sysOut.write(Message.msg());
             sysOut.flush();
 
 
