@@ -10,7 +10,25 @@ public class Notification {
     public enum Type {
         SYSTEM,
         SERVER,
-        MESSAGE,
+        MESSAGE;
+
+        private byte code;
+
+        Type() {
+            this.code = (byte) ordinal();
+        }
+
+        public byte code() {
+            return code;
+        }
+
+        public static Type fromValue(int value) throws IllegalArgumentException {
+            try {
+                return Type.values()[value];
+            } catch (ArrayIndexOutOfBoundsException e) {
+                throw new IllegalArgumentException("Unknown enum value: " + value);
+            }
+        }
     }
 
     /**
@@ -42,16 +60,32 @@ public class Notification {
         this(type, text, nick, System.currentTimeMillis());
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public String getText() {
+        return text;
+    }
+
+    public String getEmitter() {
+        return emitter;
+    }
+
+    public Type getType() {
+        return type;
     }
 
     public Date getDate() {
         return new Date(timestamp);
     }
 
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void updateTimestamp() {
+        this.timestamp = System.currentTimeMillis();
+    }
+
     public boolean isCommand() {
-        return false;
+        return text.startsWith("/");
     }
 
     @Override
