@@ -4,7 +4,7 @@ import com.messenger.common.Notification;
 
 public class Command extends Notification {
 
-    Client client;
+    SocketClient socketClient;
 
     Command(Notification.Type type, String text, String emitter, long timestamp) {
         super(type, text, emitter, timestamp);

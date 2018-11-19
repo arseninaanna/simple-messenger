@@ -1,4 +1,4 @@
 package com.messenger.server;
 
-public class Client {
+public class SocketClient {
 }
