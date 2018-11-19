@@ -24,6 +24,10 @@ public class UserInterface {
         cons.printLine("!!! " + msg + " !!!");
     }
 
+    public void printError(String msg) throws IOException {
+        cons.printLine(msg);
+    }
+
     public void printMessage(Notification msg) throws IOException {
         cons.printLine(msg.toString());
     }

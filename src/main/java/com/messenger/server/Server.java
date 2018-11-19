@@ -34,6 +34,7 @@ public class Server {
             connections.put(maxId, conn);
 
             System.out.println("New socket#" + conn.getId());
+            conn.run();
 
             // Keep ID unique
             maxId++;
