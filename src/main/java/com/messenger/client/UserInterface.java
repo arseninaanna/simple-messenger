@@ -2,43 +2,30 @@ package com.messenger.client;
 
 import com.messenger.common.Notification;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.Console;
-import java.io.IOException;
+import java.io.*;
 
 public class UserInterface {
 
-    BufferedReader in;
-    BufferedWriter out;
+    private Console cons;
 
     String currentPrompt;
 
     UserInterface() {
-        Console console = System.console();
-
-        in = new BufferedReader(console.reader());
-        out = new BufferedWriter(console.writer());
+        cons = new Console();
     }
 
     public String promptForInput(String msg) throws IOException {
-        out.write(msg);
-        String input = in.readLine();
+        cons.print(msg);
 
-        return input;
+        return cons.readLine();
     }
 
     public void printSystemMessage(String msg) throws IOException {
-        printLine("!!! " + msg + " !!!");
+        cons.printLine("!!! " + msg + " !!!");
     }
 
-    public void printMessage(Notification msg) {
-        // noop
-    }
-
-    private void printLine(String text) throws IOException {
-        out.write(text);
-        out.newLine();
+    public void printMessage(Notification msg) throws IOException {
+        cons.printLine(msg.toString());
     }
 
     public void onMessageEnter() {
