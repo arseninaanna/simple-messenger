@@ -1,10 +1,10 @@
 package com.messenger.client;
 
-import com.messenger.common.Notification;
+import com.messenger.common.Packet;
 
 import java.io.*;
 
-public class UserInterface {
+class UserInterface {
 
     private Console cons;
 
@@ -14,25 +14,25 @@ public class UserInterface {
         cons = new Console();
     }
 
-    public String promptForInput(String msg) throws IOException {
+    String promptForInput(String msg) throws IOException {
         cons.print(msg);
 
         return cons.readLine();
     }
 
-    public void printSystemMessage(String msg) throws IOException {
+    void printSystemMessage(String msg) throws IOException {
         cons.printLine("!!! " + msg + " !!!");
     }
 
-    public void printError(String msg) throws IOException {
+    void printError(String msg) throws IOException {
         cons.printLine(msg);
     }
 
-    public void printMessage(Notification msg) throws IOException {
+    void printMessage(Packet msg) throws IOException {
         cons.printLine(msg.toString());
     }
 
-    public void onMessageEnter() {
+    void onMessageEnter() {
         // noop
     }
 
