@@ -5,7 +5,7 @@ import java.util.Date;
 /**
  * Class that represents one data object, sent between client and server
  */
-public class Notification {
+public class Packet {
 
     public enum Type {
         SYSTEM,
@@ -32,31 +32,31 @@ public class Notification {
     }
 
     /**
-     * When server got this notification
+     * When server got this packet
      */
     private long timestamp;
     /**
-     * Type of notification
+     * Type of packet
      */
     private Type type;
 
     /**
-     * Name of entity that has sent notification
+     * Name of entity that has sent packet
      */
     private String emitter;
     /**
-     * Text of notification
+     * Text of packet
      */
     private String text;
 
-    public Notification(Type type, String text, String emitter, long timestamp) {
+    public Packet(Type type, String text, String emitter, long timestamp) {
         this.type = type;
         this.text = text;
         this.emitter = emitter;
         this.timestamp = timestamp;
     }
 
-    public Notification(Type type, String text, String nick) {
+    public Packet(Type type, String text, String nick) {
         this(type, text, nick, System.currentTimeMillis());
     }
 
