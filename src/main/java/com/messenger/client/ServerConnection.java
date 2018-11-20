@@ -43,7 +43,7 @@ class ServerConnection {
         }
     }
 
-    void onPacket(Consumer<Packet> fn) throws IOException {
+    void onPacket(Consumer<Packet> fn) {
         onPacket = fn;
     }
 

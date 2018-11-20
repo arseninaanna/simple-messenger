@@ -1,11 +1,14 @@
 package com.messenger.client;
 
 import com.messenger.common.GlobalSettings;
+import com.messenger.common.Packet;
+import com.messenger.common.SystemCode;
 
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
 
 public class StartClient {
 
@@ -22,17 +25,34 @@ public class StartClient {
             ServerConnection connection = new ServerConnection(socket);
             connection.onPacket(packet -> {
                 try {
+                    if (packet.getType() == Packet.Type.SYSTEM) {
+                        SystemCode code = Enum.valueOf(SystemCode.class, packet.getText());
+                        switch (code) {
+                            case CLOSE:
+                                connection.close();
+                                return;
+                            default:
+                                throw new InvalidParameterException("Unsupported system code received");
+                        }
+                    }
+
                     ui.printMessage(packet);
                 } catch (IOException e) {
+                    // todo
+                    e.printStackTrace();
+                } catch (InvalidParameterException e) {
+                    // todo
                     e.printStackTrace();
                 }
             });
-            connection.onError(error -> {
+            connection.onError(e -> {
                 // todo
-                error.printStackTrace();
+                e.printStackTrace();
             });
 
             connection.run();
+
+            System.out.println("End");
         } catch (ConnectException e) {
             ui.printError("Failed to connect to server. Is it running?");
         } catch (UnknownHostException e) {
