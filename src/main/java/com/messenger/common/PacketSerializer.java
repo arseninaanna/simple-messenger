@@ -1,8 +1,6 @@
 package com.messenger.common;
 
-import java.io.ByteArrayInputStream;
-import java.io.InvalidObjectException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
 import java.util.Scanner;
@@ -25,8 +23,11 @@ public class PacketSerializer {
 
     // total length + type length + timestamp length
     private static final int PREFIX_SIZE = Long.BYTES + Byte.BYTES + Long.BYTES;
+
     // PREFIX_SIZE + emitter length + text length
-    private static final int MIN_SIZE = PREFIX_SIZE + Byte.BYTES + Short.BYTES;
+    public static final int MIN_SIZE = PREFIX_SIZE + Byte.BYTES + Short.BYTES;
+    // MIN_SIZE + max emitter len + max text len
+    public static final int MAX_SIZE = MIN_SIZE + Byte.MAX_VALUE + Short.MAX_VALUE;
 
     private static final String ENCODING = "UTF-8";
 
@@ -36,7 +37,7 @@ public class PacketSerializer {
      */
     public static byte[] serizalize(Packet data) throws InvalidParameterException, UnsupportedEncodingException {
         byte[] emitter = data.getEmitter().getBytes(ENCODING);
-        byte[] text = data.getEmitter().getBytes(ENCODING);
+        byte[] text = data.getText().getBytes(ENCODING);
 
         if (emitter.length > Byte.MAX_VALUE) {
             throw new InvalidParameterException("Emitter length exceeded");
@@ -63,34 +64,40 @@ public class PacketSerializer {
      * @param data - Byte array of serialized packet
      * @return - Deserialized packet object
      */
-    public static Packet deserialize(byte[] data) throws InvalidParameterException, UnsupportedEncodingException {
-        if (data.length < MIN_SIZE) {
-            throw new InvalidParameterException("Data should be minimum " + MIN_SIZE + " bytes long, " + data.length + " received");
-        }
+    public static Packet deserialize(byte[] data) throws InvalidParameterException, IOException {
         ByteArrayInputStream stream = new ByteArrayInputStream(data);
-        Scanner sc = new Scanner(stream, ENCODING);
+        DataInputStream dstream = new DataInputStream(stream);
 
-        int totalLen = sc.nextInt();
+        int totalLen = dstream.readInt();
         if (data.length < totalLen) {
             throw new InvalidParameterException("Data should be " + totalLen + " bytes long, " + data.length + " received");
         }
 
-        byte type = sc.nextByte();
-        long tstamp = sc.nextLong();
+        byte type = dstream.readByte();
+        long tstamp = dstream.readLong();
 
-        byte emitterLen = sc.nextByte();
-        String nick = readStr(sc, emitterLen);
+        byte emitterLen = dstream.readByte();
+        String nick = readStr(dstream, emitterLen);
 
-        short textLen = sc.nextShort();
-        String text = readStr(sc, textLen);
+        short textLen = dstream.readShort();
+        String text = readStr(dstream, textLen);
 
         return new Packet(Packet.Type.fromValue(type), text, nick, tstamp);
     }
 
-    private static String readStr(Scanner scanner, int length) throws UnsupportedEncodingException {
+    static void validatePacketLength(int len) throws InvalidParameterException {
+        if (len < MIN_SIZE) {
+            throw new InvalidParameterException("Packet length should be minimum " + MIN_SIZE + ", " + len + " received");
+        }
+        if (len > MAX_SIZE) {
+            throw new InvalidParameterException("Packet length should be maximum " + MAX_SIZE + ", " + len + " received");
+        }
+    }
+
+    private static String readStr(DataInputStream dstream, int length) throws IOException {
         byte[] b = new byte[length];
         for (int i = 0; i < length; i++) {
-            b[i] = scanner.nextByte();
+            b[i] = dstream.readByte();
         }
 
         return new String(b, ENCODING);

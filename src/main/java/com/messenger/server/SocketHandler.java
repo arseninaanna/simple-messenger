@@ -1,5 +1,8 @@
 package com.messenger.server;
 
+import com.messenger.common.Packet;
+import com.messenger.common.PacketSerializer;
+
 import java.io.IOException;
 import java.net.Socket;
 
@@ -19,7 +22,9 @@ public class SocketHandler {
 
     public void run() throws IOException {
         while (!socket.isClosed()) {
-            socket.getOutputStream().write("test".getBytes());
+            Packet p = new Packet(Packet.Type.MESSAGE, "test msg", "system");
+            byte[] pb = PacketSerializer.serizalize(p);
+            socket.getOutputStream().write(pb);
             socket.getOutputStream().flush();
             System.out.println("wrote");
 

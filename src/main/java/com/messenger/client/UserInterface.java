@@ -4,6 +4,7 @@ import com.messenger.common.Packet;
 
 import java.io.*;
 
+// todo: add multithreading
 class UserInterface {
 
     private Console cons;

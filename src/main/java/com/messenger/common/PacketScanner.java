@@ -3,6 +3,7 @@ package com.messenger.common;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 public class PacketScanner {
 
@@ -14,8 +15,14 @@ public class PacketScanner {
 
     public Packet nextPacket() throws IOException {
         int len = inputStream.readInt();
+        PacketSerializer.validatePacketLength(len);
+
         byte[] b = new byte[len];
-        for (int i = 0; i < len; i++) {
+
+        byte[] lenb = ByteBuffer.allocate(4).putInt(len).array();
+        System.arraycopy(lenb, 0, b, 0, 4);
+
+        for (int i = 4; i < len; i++) {
             b[i] = inputStream.readByte();
         }
 
