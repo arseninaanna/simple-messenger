@@ -31,10 +31,11 @@ public class Server {
 
             // Process new client
             SocketHandler conn = new SocketHandler(maxId, cSocket);
-            connections.put(maxId, conn);
 
             System.out.println("New socket#" + conn.getId());
-            conn.run();
+            connections.put(maxId, conn);
+
+            conn.start();
 
             // Keep ID unique
             maxId++;

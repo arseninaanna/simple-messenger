@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public class StartServer {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         try {
             Server server = new Server(GlobalSettings.serverPort);
             server.run();

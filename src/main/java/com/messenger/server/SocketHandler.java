@@ -6,7 +6,7 @@ import com.messenger.common.PacketSerializer;
 import java.io.IOException;
 import java.net.Socket;
 
-public class SocketHandler {
+public class SocketHandler extends Thread {
 
     private int id;
     private Socket socket;
@@ -20,12 +20,22 @@ public class SocketHandler {
         this.socket = socket;
     }
 
-    public void run() throws IOException {
+    @Override
+    public void run() {
         while (!socket.isClosed()) {
-            Packet p = new Packet(Packet.Type.MESSAGE, "test msg", "system");
-            byte[] pb = PacketSerializer.serizalize(p);
-            socket.getOutputStream().write(pb);
-            socket.getOutputStream().flush();
+            Packet p = new Packet(Packet.Type.MESSAGE, "test msg");
+            try {
+                byte[] pb = PacketSerializer.serizalize(p);
+                socket.getOutputStream().write(pb);
+                socket.getOutputStream().flush();
+            } catch (IOException e) {
+                try {
+                    socket.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                e.printStackTrace();
+            }
             System.out.println("wrote");
 
             try {
@@ -36,7 +46,7 @@ public class SocketHandler {
         }
     }
 
-    public int getId() {
+    public int getClientId() {
         return id;
     }
 }

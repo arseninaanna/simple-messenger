@@ -20,8 +20,6 @@ class ServerConnection {
     private Consumer<Packet> onPacket;
     private Consumer<Exception> onError;
 
-    private boolean open = false;
-
     ServerConnection(Socket socket) throws IOException {
         this.socket = socket;
 
@@ -30,10 +28,9 @@ class ServerConnection {
     }
 
     void run() {
-        open = true;
         PacketScanner sc = new PacketScanner(input);
 
-        while (open) {
+        while (!socket.isClosed()) {
             try {
                 Packet p = sc.nextPacket();
                 onPacket.accept(p);
@@ -58,8 +55,8 @@ class ServerConnection {
         output.flush();
     }
 
-    void close() {
-        open = false;
+    void close() throws IOException {
+        socket.close();
     }
 
 }

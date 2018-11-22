@@ -56,6 +56,14 @@ public class Packet {
         this.timestamp = timestamp;
     }
 
+    public Packet(SystemCode code) {
+        this(Type.SYSTEM, code.name(), "");
+    }
+
+    public Packet(Type type, String text) {
+        this(type, text, "");
+    }
+
     public Packet(Type type, String text, String nick) {
         this(type, text, nick, System.currentTimeMillis());
     }
