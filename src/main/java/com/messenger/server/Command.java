@@ -10,18 +10,18 @@ public class Command {
 
     private static final String STR_QUOTE = "`";
 
-    SocketClient socketClient;
+    ClientConnection clientConnection;
     private Packet packet;
 
     private String command; // Command name in lower case
     private String[] params; // Parsed command parameters
 
-    Command(Packet packet, SocketClient client) {
+    Command(Packet packet, ClientConnection client) {
         if (!packet.isCommand()) {
             throw new InvalidParameterException("Supplied packet is not a command");
         }
 
-        this.socketClient = client;
+        this.clientConnection = client;
         this.packet = packet;
 
         parsePacketText();

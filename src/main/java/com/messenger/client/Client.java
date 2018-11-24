@@ -24,6 +24,8 @@ class Client {
     }
 
     void run() {
+        (new Heartbeat(connection)).start();
+
         connection.run();
     }
 
@@ -33,6 +35,9 @@ class Client {
                 switch (SystemCode.fromValue(packet.getText())) {
                     case CLOSE:
                         connection.close();
+                        return;
+                    case PONG:
+                        System.out.println("pong received");
                         return;
                     default:
                         throw new InvalidParameterException("Unsupported system code received");
