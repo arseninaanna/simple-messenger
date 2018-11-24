@@ -7,8 +7,9 @@ import java.io.IOException;
 public class StartServer {
 
     public static void main(String[] args) {
+        Server server = new Server(GlobalSettings.serverPort);
+
         try {
-            Server server = new Server(GlobalSettings.serverPort);
             server.run();
         } catch (IOException e) {
             e.printStackTrace();

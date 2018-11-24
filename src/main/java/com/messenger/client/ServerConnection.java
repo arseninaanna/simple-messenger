@@ -49,7 +49,7 @@ class ServerConnection {
     }
 
     void sendPacket(Packet p) throws IOException {
-        byte[] b = PacketSerializer.serizalize(p);
+        byte[] b = PacketSerializer.serialize(p);
 
         output.write(b, 0, b.length);
         output.flush();

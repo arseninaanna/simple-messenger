@@ -8,24 +8,24 @@ import java.net.Socket;
 
 public class SocketHandler extends Thread {
 
-    private int id;
+    private int clientId;
     private Socket socket;
 
     SocketHandler(Socket socket) {
         this((int) (Math.random() * Integer.MAX_VALUE), socket);
     }
 
-    SocketHandler(int id, Socket socket) {
-        this.id = id;
+    SocketHandler(int clientId, Socket socket) {
+        this.clientId = clientId;
         this.socket = socket;
     }
 
     @Override
     public void run() {
         while (!socket.isClosed()) {
-            Packet p = new Packet(Packet.Type.MESSAGE, "test msg");
+            Packet p = new Packet(Packet.Type.SERVER, "test msg");
             try {
-                byte[] pb = PacketSerializer.serizalize(p);
+                byte[] pb = PacketSerializer.serialize(p);
                 socket.getOutputStream().write(pb);
                 socket.getOutputStream().flush();
             } catch (IOException e) {
@@ -47,6 +47,6 @@ public class SocketHandler extends Thread {
     }
 
     public int getClientId() {
-        return id;
+        return clientId;
     }
 }

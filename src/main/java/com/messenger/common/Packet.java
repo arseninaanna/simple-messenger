@@ -1,5 +1,7 @@
 package com.messenger.common;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -32,7 +34,7 @@ public class Packet {
     }
 
     /**
-     * When server got this packet
+     * When server got this packet (in milliseconds)
      */
     private long timestamp;
     /**
@@ -73,6 +75,10 @@ public class Packet {
     }
 
     public String getEmitter() {
+        if (type == Type.SERVER && emitter.length() == 0) {
+            return "SERVER";
+        }
+
         return emitter;
     }
 
@@ -80,8 +86,9 @@ public class Packet {
         return type;
     }
 
-    public Date getDate() {
-        return new Date(timestamp);
+    public String getDate() {
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return format.format(new Date(timestamp));
     }
 
     public long getTimestamp() {
@@ -98,7 +105,7 @@ public class Packet {
 
     @Override
     public String toString() {
-        String content = emitter + ": " + text;
+        String content = getEmitter() + ": " + getText();
 
         return "[" + getDate() + "] " + content;
     }

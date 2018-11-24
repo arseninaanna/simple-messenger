@@ -9,30 +9,27 @@ import java.util.Map;
 public class Server {
 
     private int port;
-    private boolean running = false;
 
     private ServerSocket sSocket;
 
     private int maxId = 0;
     private Map<Integer, SocketHandler> connections;
 
-    Server(int port) throws IOException {
+    Server(int port) {
         this.port = port;
-
-        sSocket = new ServerSocket(this.port);
-        connections = new HashMap<>();
+        this.connections = new HashMap<>();
     }
 
     public void run() throws IOException {
-        running = true;
+        sSocket = new ServerSocket(this.port);
 
-        while (running) {
+        while (!sSocket.isClosed()) {
             Socket cSocket = sSocket.accept();
 
             // Process new client
             SocketHandler conn = new SocketHandler(maxId, cSocket);
 
-            System.out.println("New socket#" + conn.getId());
+            System.out.println("User#" + conn.getClientId() + " connected");
             connections.put(maxId, conn);
 
             conn.start();
@@ -43,7 +40,6 @@ public class Server {
     }
 
     public void stop() throws IOException {
-        running = false;
         sSocket.close();
     }
 

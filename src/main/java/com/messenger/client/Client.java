@@ -10,13 +10,15 @@ import java.security.InvalidParameterException;
 
 class Client {
 
-    private UserInterface ui;
+    UserInterface ui;
     private Socket socket;
     private ServerConnection connection;
 
-    Client() throws IOException {
+    Client() {
         ui = new UserInterface();
+    }
 
+    void connect() throws IOException {
         startSocket();
         startConnection();
     }
@@ -25,7 +27,7 @@ class Client {
         connection.run();
     }
 
-    private void packetHandler(Packet packet) {
+    private void socketPacketHandler(Packet packet) {
         try {
             if (packet.getType() == Packet.Type.SYSTEM) {
                 switch (SystemCode.fromValue(packet.getText())) {
@@ -39,19 +41,19 @@ class Client {
 
             ui.printMessage(packet);
         } catch (Exception e) {
-            errorHandler(e);
+            socketErrorHandler(e);
         }
     }
 
-    private void errorHandler(Exception e) {
+    private void socketErrorHandler(Exception e) {
         // todo
         e.printStackTrace();
     }
 
     private void startConnection() throws IOException {
         connection = new ServerConnection(socket);
-        connection.onPacket(this::packetHandler);
-        connection.onError(this::errorHandler);
+        connection.onPacket(this::socketPacketHandler);
+        connection.onError(this::socketErrorHandler);
 
         System.out.println("Connection initialized");
     }

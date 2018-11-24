@@ -35,7 +35,7 @@ public class PacketSerializer {
      * @param data - Packet to serialize
      * @return - byte stream of serialized data
      */
-    public static byte[] serizalize(Packet data) throws InvalidParameterException, UnsupportedEncodingException {
+    public static byte[] serialize(Packet data) throws InvalidParameterException, UnsupportedEncodingException {
         byte[] emitter = data.getEmitter().getBytes(ENCODING);
         byte[] text = data.getText().getBytes(ENCODING);
 

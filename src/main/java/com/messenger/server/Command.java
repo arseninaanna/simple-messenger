@@ -2,20 +2,41 @@ package com.messenger.server;
 
 import com.messenger.common.Packet;
 
-public class Command extends Packet {
+import java.security.InvalidParameterException;
+
+public class Command {
 
     SocketClient socketClient;
+    private Packet packet;
 
-    Command(Packet.Type type, String text, String emitter, long timestamp) {
-        super(type, text, emitter, timestamp);
+    private String command;
+    private String[] params;
+
+    Command(Packet packet, SocketClient client) {
+        if (!packet.isCommand()) {
+            throw new InvalidParameterException("Supplied packet is not a command");
+        }
+
+        this.socketClient = client;
+        this.packet = packet;
+
+        parsePacketText();
     }
 
     public String getCommand() {
-        return ""; // todo
+        return command;
     }
 
-    public String getParams() {
-        return ""; // todo
+    public String[] getParams() {
+        return params;
+    }
+
+    private void parsePacketText() {
+        String[] parts = packet.getText().substring(1).trim().split("\\w+");
+
+        command = "";
+        params = new String[0];
+
     }
 
 }
