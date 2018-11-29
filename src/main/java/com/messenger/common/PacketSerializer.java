@@ -3,7 +3,6 @@ package com.messenger.common;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
-import java.util.Scanner;
 
 /**
  * Class for client-server messages conversion
@@ -22,14 +21,14 @@ import java.util.Scanner;
 public class PacketSerializer {
 
     // total length + type length + timestamp length
-    private static final int PREFIX_SIZE = Long.BYTES + Byte.BYTES + Long.BYTES;
+    private static final int PREFIX_SIZE = Integer.BYTES + Byte.BYTES + Long.BYTES;
 
     // PREFIX_SIZE + emitter length + text length
-    public static final int MIN_SIZE = PREFIX_SIZE + Byte.BYTES + Short.BYTES;
+    private static final int MIN_SIZE = PREFIX_SIZE + Byte.BYTES + Short.BYTES;
     // MIN_SIZE + max emitter len + max text len
-    public static final int MAX_SIZE = MIN_SIZE + Byte.MAX_VALUE + Short.MAX_VALUE;
+    private static final int MAX_SIZE = MIN_SIZE + Byte.MAX_VALUE + Short.MAX_VALUE;
 
-    private static final String ENCODING = "UTF-8";
+    private static final String ENCODING = "UTF-8"; // We always encode/decode utf-8 strings
 
     /**
      * @param data - Packet to serialize
@@ -74,7 +73,7 @@ public class PacketSerializer {
         }
 
         byte type = dstream.readByte();
-        long tstamp = dstream.readLong();
+        long timestamp = dstream.readLong();
 
         byte emitterLen = dstream.readByte();
         String nick = readStr(dstream, emitterLen);
@@ -82,7 +81,7 @@ public class PacketSerializer {
         short textLen = dstream.readShort();
         String text = readStr(dstream, textLen);
 
-        return new Packet(Packet.Type.fromValue(type), text, nick, tstamp);
+        return new Packet(Packet.Type.fromValue(type), text, nick, timestamp);
     }
 
     static void validatePacketLength(int len) throws InvalidParameterException {
@@ -94,10 +93,18 @@ public class PacketSerializer {
         }
     }
 
-    private static String readStr(DataInputStream dstream, int length) throws IOException {
+    /**
+     * Reads string of arbitrary length from input stream
+     *
+     * @param stream
+     * @param length string length in bytes
+     * @throws IOException
+     */
+    private static String readStr(InputStream stream, int length) throws IOException {
         byte[] b = new byte[length];
-        for (int i = 0; i < length; i++) {
-            b[i] = dstream.readByte();
+        int readBytes = stream.read(b);
+        if (readBytes != length) {
+            throw new EOFException("Unexpected end of steam");
         }
 
         return new String(b, ENCODING);

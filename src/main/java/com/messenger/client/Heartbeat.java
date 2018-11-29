@@ -7,8 +7,8 @@ import com.messenger.common.SystemCode;
 
 public class Heartbeat extends Thread {
 
-    private SocketWrapper socket;
-    private int interval;
+    private SocketWrapper socket; // connection with server
+    private int interval; // how frequent should ping/pong happen
 
     Heartbeat(SocketWrapper socket) {
         this.socket = socket;

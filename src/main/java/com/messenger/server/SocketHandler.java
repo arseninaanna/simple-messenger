@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.security.InvalidParameterException;
 
-public class SocketHandler extends Thread {
+public class SocketHandler implements Runnable {
 
     private Server server;
 
@@ -27,14 +27,13 @@ public class SocketHandler extends Thread {
         this.socket = socket;
     }
 
-    @Override
     public void run() {
         try {
             wrapper = new ClientConnection(socket);
             wrapper.onPacket(this::socketPacketHandler);
             wrapper.onError(this::socketErrorHandler);
 
-            wrapper.run();
+            wrapper.run(); // stops only on error or socket close
         } catch (IOException e) {
             try {
                 socket.close();

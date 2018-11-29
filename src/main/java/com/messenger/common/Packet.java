@@ -9,10 +9,15 @@ import java.util.Date;
  */
 public class Packet {
 
+    /**
+     * Type of packet, can be encodes as integer
+     */
     public enum Type {
-        SYSTEM,
-        SERVER,
-        MESSAGE;
+        SYSTEM, // System packet contains only system codes, that can't be emitted directly by user
+        SERVER, // Message from server itself, usually some announcements
+        RESPONSE, // Some response of server command
+        MESSAGE, // Message from another user
+        ;
 
         private byte code;
 
@@ -58,8 +63,8 @@ public class Packet {
         this.timestamp = timestamp;
     }
 
-    public Packet(SystemCode code) {
-        this(Type.SYSTEM, code.name(), "");
+    public Packet(SystemCode sysCode) {
+        this(Type.SYSTEM, sysCode.code(), "");
     }
 
     public Packet(Type type, String text) {

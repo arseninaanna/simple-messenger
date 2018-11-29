@@ -6,24 +6,24 @@ import com.messenger.common.SocketWrapper;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-public class Server {
+class Server {
 
     private int port;
 
     private ServerSocket sSocket;
 
     private int maxClientId = 0;
-    private Map<Integer, SocketHandler> connections;
+    private ConcurrentMap<Integer, SocketHandler> connections;
 
     Server(int port) {
         this.port = port;
-        this.connections = new HashMap<>();
+        this.connections = new ConcurrentHashMap<>();
     }
 
-    public void run() throws IOException {
+    void run() throws IOException {
         sSocket = new ServerSocket(this.port);
 
         while (!sSocket.isClosed()) {
@@ -35,23 +35,23 @@ public class Server {
             System.out.println("User#" + conn.getClientId() + " connected");
             connections.put(maxClientId, conn);
 
-            conn.start();
+            (new Thread(conn)).start();
 
             // Keep ID unique
             maxClientId++;
         }
     }
 
-    public void broadcast(Packet p) {
-        for (Map.Entry<Integer, SocketHandler> entry : connections.entrySet()) {
+    void broadcast(Packet p) {
+        for (ConcurrentMap.Entry<Integer, SocketHandler> entry : connections.entrySet()) {
             SocketWrapper wrapper = entry.getValue().getWrapper();
-            if(wrapper.isActive()) {
+            if (wrapper.isActive()) {
                 wrapper.sendPacket(p);
             }
         }
     }
 
-    public void stop() throws IOException {
+    void stop() throws IOException {
         // TODO: broadcast system packet with close command
         sSocket.close();
     }
