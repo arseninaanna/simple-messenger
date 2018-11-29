@@ -76,10 +76,10 @@ public class PacketSerializer {
         long timestamp = dstream.readLong();
 
         byte emitterLen = dstream.readByte();
-        String nick = readStr(dstream, emitterLen);
+        String nick = readStr(dstream, emitterLen, false);
 
         short textLen = dstream.readShort();
-        String text = readStr(dstream, textLen);
+        String text = readStr(dstream, textLen, true);
 
         return new Packet(Packet.Type.fromValue(type), text, nick, timestamp);
     }
@@ -100,11 +100,11 @@ public class PacketSerializer {
      * @param length string length in bytes
      * @throws IOException
      */
-    private static String readStr(InputStream stream, int length) throws IOException {
+    private static String readStr(InputStream stream, int length, boolean allowEof) throws IOException {
         byte[] b = new byte[length];
         int readBytes = stream.read(b);
-        if (readBytes != length) {
-            throw new EOFException("Unexpected end of steam");
+        if (readBytes != length && !(allowEof && length == 0)) {
+            throw new EOFException("Unexpected end of steam. Read bytes " + readBytes + "; required " + length);
         }
 
         return new String(b, ENCODING);

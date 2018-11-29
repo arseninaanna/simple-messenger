@@ -25,8 +25,14 @@ class Client {
 
     void run() {
         (new Heartbeat(connection)).start();
+        (new Thread(connection)).start();
 
-        connection.run();
+        ui.onMessageEnter(m -> {
+            Packet p = new Packet(Packet.Type.MESSAGE, m);
+            connection.sendPacket(p);
+        });
+
+        ui.run();
     }
 
     private void socketPacketHandler(Packet packet) {
