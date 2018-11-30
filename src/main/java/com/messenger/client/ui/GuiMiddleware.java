@@ -1,19 +1,25 @@
 package com.messenger.client.ui;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.IOException;
+import java.awt.event.*;
 import java.util.function.Consumer;
 
 class GuiMiddleware extends Frame {
 
-    private static final int WIDTH = 400;
+    private static final String TITLE = "Chat Client";
+    private static final int WIDTH = 450;
     private static final int HEIGHT = 600;
 
-    private Consumer<String> onMessage;
+    private Consumer<String> onMessage = (String n) -> {
+    };
+    private Consumer<String> onNick = (String n) -> {
+    };
+    private Runnable onQuit = () -> {
+    };
+    private Runnable onInputEnter = () -> {
+    };
 
+    private Label header;
     private TextArea display;
     private TextField input;
     private Button send, connect, quit;
@@ -30,12 +36,20 @@ class GuiMiddleware extends Frame {
     void init() {
         placeWindow();
         buildLayout();
-        setHandlers();
 
+        setButtonsHandlers();
+        setInputHandlers();
+        setWindowHandlers();
+
+        setTitle(TITLE);
         setVisible(true);
         requestFocus();
 
         input.requestFocus();
+    }
+
+    void printLine(String text) {
+        display.append(text + "\n");
     }
 
     void close() {
@@ -44,10 +58,6 @@ class GuiMiddleware extends Frame {
 
     void onMessageEnter(Consumer<String> fn) {
         onMessage = fn;
-    }
-
-    void printLine(String text) throws IOException {
-        display.append(text + "\n");
     }
 
     private String flushInput() {
@@ -59,6 +69,9 @@ class GuiMiddleware extends Frame {
     }
 
     private void buildLayout() {
+        header = new Label(null, Label.CENTER);
+        header.setFont(new Font("Helvetica", Font.PLAIN, 14));
+
         Panel keys = new Panel();
         keys.setLayout(new GridLayout(1, 2));
         keys.add(quit);
@@ -71,11 +84,14 @@ class GuiMiddleware extends Frame {
         actionPanel.add("East", send);
 
         setLayout(new BorderLayout());
+        add("North", header);
         add("Center", display);
         add("South", actionPanel);
 
         quit.setEnabled(false);
+        connect.setEnabled(true);
         send.setEnabled(false);
+        onInputEnter = () -> handleConnect(null);
     }
 
     private void placeWindow() {
@@ -92,28 +108,69 @@ class GuiMiddleware extends Frame {
         setLocation(x, y);
     }
 
-    private void setHandlers() {
-        quit.addActionListener((ActionEvent e) -> {
-            input.setText(null);
+    private void setButtonsHandlers() {
+        quit.addActionListener(this::handleQuit);
+        connect.addActionListener(this::handleConnect);
+        send.addActionListener(this::handleSend);
+    }
 
-            quit.setEnabled(false);
-            send.setEnabled(false);
-            connect.setEnabled(true);
-        });
-        connect.addActionListener((ActionEvent e) -> {
-            String name = flushInput();
+    private void handleQuit(ActionEvent e) {
+        onInputEnter = () -> handleConnect(null);
 
-            quit.setEnabled(true);
-            send.setEnabled(true);
-            connect.setEnabled(false);
-        });
+        header.setText(null);
+        flushInput();
+        display.setText(null);
 
-        send.addActionListener((ActionEvent e) -> {
-            String msg = flushInput();
+        quit.setEnabled(false);
+        connect.setEnabled(true);
+        send.setEnabled(false);
+    }
 
+    private void handleConnect(ActionEvent e) {
+        String name = flushInput();
+        if (name == null || name.length() == 0) {
+            return;
+        }
+
+        header.setText("Nick: " + name);
+
+        onInputEnter = () -> handleSend(null);
+
+        quit.setEnabled(true);
+        connect.setEnabled(false);
+        send.setEnabled(true);
+    }
+
+    private void handleSend(ActionEvent e) {
+        String msg = flushInput();
+
+        if (msg != null && msg.length() > 0) {
             onMessage.accept(msg);
-        });
+        }
+    }
 
+    private void setInputHandlers() {
+        input.addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    onInputEnter.run();
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+            }
+
+        });
+    }
+
+    private void setWindowHandlers() {
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent we) {
                 close();
