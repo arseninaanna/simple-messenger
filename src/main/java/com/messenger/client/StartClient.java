@@ -6,8 +6,6 @@ import java.net.UnknownHostException;
 
 public class StartClient {
 
-    public static final boolean DEBUG = true;
-
     public static void main(String[] args) {
         Client client = new Client();
 

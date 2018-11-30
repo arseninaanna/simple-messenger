@@ -1,13 +1,17 @@
-package com.messenger.client;
+package com.messenger.client.ui;
 
 import java.io.*;
 
-class Console {
+/**
+ * Wrapper to work with console
+ * @deprecated
+ */
+class ConsoleMiddleware {
 
     private BufferedReader in;
     private BufferedWriter out;
 
-    Console() {
+    ConsoleMiddleware() {
         InputStreamReader streamReader = new InputStreamReader(System.in);
         OutputStreamWriter streamWriter = new OutputStreamWriter(System.out);
 

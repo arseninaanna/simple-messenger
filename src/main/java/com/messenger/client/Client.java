@@ -1,5 +1,6 @@
 package com.messenger.client;
 
+import com.messenger.client.ui.UserInterface;
 import com.messenger.common.GlobalSettings;
 import com.messenger.common.Packet;
 import com.messenger.common.SystemCode;
