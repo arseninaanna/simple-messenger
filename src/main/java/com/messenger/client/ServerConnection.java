@@ -1,62 +1,67 @@
 package com.messenger.client;
 
 import com.messenger.common.Packet;
-import com.messenger.common.PacketScanner;
-import com.messenger.common.PacketSerializer;
+import com.messenger.common.SocketWrapper;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.function.Consumer;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
-class ServerConnection {
+class ServerConnection extends SocketWrapper {
 
-    private Socket socket;
+    private final static Packet.Type[] allowedCbTypes = new Packet.Type[]{Packet.Type.SYSTEM, Packet.Type.RESPONSE};
 
-    private BufferedInputStream input;
-    private BufferedOutputStream output;
-
-    private Consumer<Packet> onPacket;
-    private Consumer<Exception> onError;
+    private short localId = 0;
+    private ConcurrentMap<Short, Function<Packet, Boolean>> callbacks;
 
     ServerConnection(Socket socket) throws IOException {
-        this.socket = socket;
+        super(socket);
 
-        input = new BufferedInputStream(socket.getInputStream());
-        output = new BufferedOutputStream(socket.getOutputStream());
+        callbacks = new ConcurrentHashMap<>();
     }
 
-    void run() {
-        PacketScanner sc = new PacketScanner(input);
+    @Override
+    protected void handlePacket(Packet p) {
+        short id = p.getId();
 
-        while (!socket.isClosed()) {
-            try {
-                Packet p = sc.nextPacket();
-                onPacket.accept(p);
-            } catch (IOException e) {
-                onError.accept(e);
+        if (p.hasType(allowedCbTypes) && callbacks.containsKey(id)) {
+            System.out.println("Call callback");
+            boolean process = callbacks.get(id).apply(p);
+            callbacks.remove(id);
+
+            if (!process) {
+                return;
             }
+        }
+
+        super.handlePacket(p);
+    }
+
+    @Override
+    public void sendPacket(Packet p) {
+        addId(p);
+
+        super.sendPacket(p);
+    }
+
+    void sendPacket(Packet p, Function<Packet, Boolean> cb) {
+        addId(p);
+        addCallback(p, cb);
+        System.out.println(p.getId() + " -> " + p.getText());
+
+        super.sendPacket(p);
+    }
+
+    private void addCallback(Packet p, Function<Packet, Boolean> cb) {
+        if (p.getId() != -1) {
+            callbacks.put(p.getId(), cb);
         }
     }
 
-    void onPacket(Consumer<Packet> fn) {
-        onPacket = fn;
-    }
-
-    void onError(Consumer<Exception> fn) {
-        onError = fn;
-    }
-
-    void sendPacket(Packet p) throws IOException {
-        byte[] b = PacketSerializer.serialize(p);
-
-        output.write(b, 0, b.length);
-        output.flush();
-    }
-
-    void close() throws IOException {
-        socket.close();
+    private void addId(Packet p) {
+        p.setId(localId++);
     }
 
 }

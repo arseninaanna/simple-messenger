@@ -1,11 +1,21 @@
 package com.messenger.common;
 
+/**
+ * Possible system commands
+ */
 public enum SystemCode {
 
-    CLOSE;
+    CLOSE, // End current session
+    PING, // Ping message from user
+    PONG, // Pong message from server
+    ;
 
-    public static SystemCode fromValue(String val) {
-        return Enum.valueOf(SystemCode.class, val);
+    public String code() {
+        return super.name();
+    }
+
+    public static SystemCode fromValue(String value) {
+        return Enum.valueOf(SystemCode.class, value);
     }
 
 }

@@ -3,6 +3,7 @@ package com.messenger.server;
 import com.messenger.common.Packet;
 
 import java.security.InvalidParameterException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,18 +11,18 @@ public class Command {
 
     private static final String STR_QUOTE = "`";
 
-    SocketClient socketClient;
+    ClientConnection clientConnection;
     private Packet packet;
 
     private String command; // Command name in lower case
     private String[] params; // Parsed command parameters
 
-    Command(Packet packet, SocketClient client) {
+    Command(Packet packet, ClientConnection client) {
         if (!packet.isCommand()) {
             throw new InvalidParameterException("Supplied packet is not a command");
         }
 
-        this.socketClient = client;
+        this.clientConnection = client;
         this.packet = packet;
 
         parsePacketText();
@@ -37,7 +38,7 @@ public class Command {
 
     private void parsePacketText() {
         // Raw parse of command text
-        String[] parts = packet.getText().substring(1).trim().split("\\w");
+        String[] parts = packet.getText().substring(1).trim().split("\\W");
 
         // Flush old parsed data and set default fallback
         command = "";

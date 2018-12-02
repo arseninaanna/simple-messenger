@@ -9,10 +9,15 @@ import java.util.Date;
  */
 public class Packet {
 
+    /**
+     * Type of packet, can be encodes as integer
+     */
     public enum Type {
-        SYSTEM,
-        SERVER,
-        MESSAGE;
+        SYSTEM, // System packet contains only system codes, that can't be emitted directly by user
+        SERVER, // Message from server itself, usually some announcements
+        RESPONSE, // Some response of server command
+        MESSAGE, // Message from another user
+        ;
 
         private byte code;
 
@@ -34,6 +39,11 @@ public class Packet {
     }
 
     /**
+     * Contains local sender client packet id.
+     * It is ok, if it would overflow, as we use it only for response detection
+     */
+    private short localId = -1;
+    /**
      * When server got this packet (in milliseconds)
      */
     private long timestamp;
@@ -54,12 +64,17 @@ public class Packet {
     public Packet(Type type, String text, String emitter, long timestamp) {
         this.type = type;
         this.text = text;
-        this.emitter = emitter;
         this.timestamp = timestamp;
+
+        if (emitter == null) {
+            this.emitter = "";
+        } else {
+            this.emitter = emitter;
+        }
     }
 
-    public Packet(SystemCode code) {
-        this(Type.SYSTEM, code.name(), "");
+    public Packet(SystemCode sysCode) {
+        this(Type.SYSTEM, sysCode.code(), "");
     }
 
     public Packet(Type type, String text) {
@@ -86,6 +101,20 @@ public class Packet {
         return type;
     }
 
+    public boolean hasType(Type t) {
+        return type == t;
+    }
+
+    public boolean hasType(Type[] tArr) {
+        for (Type t : tArr) {
+            if (type == t) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public String getDate() {
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return format.format(new Date(timestamp));
@@ -97,6 +126,28 @@ public class Packet {
 
     public void updateTimestamp() {
         this.timestamp = System.currentTimeMillis();
+    }
+
+    public void setId(short localId) {
+        this.localId = localId;
+    }
+
+    public short getId() {
+        return localId;
+    }
+
+    public Packet respond(String text) {
+        Packet resp = new Packet(Type.RESPONSE, text);
+        resp.setId(getId());
+
+        return resp;
+    }
+
+    public Packet respond(SystemCode code) {
+        Packet resp = new Packet(code);
+        resp.setId(getId());
+
+        return resp;
     }
 
     public boolean isCommand() {
