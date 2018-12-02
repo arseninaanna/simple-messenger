@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
 class Server {
@@ -15,12 +16,17 @@ class Server {
 
     private ServerSocket sSocket;
 
+    private final static int MESSAGES_LOG = 10;
+    private ConcurrentLinkedQueue<Packet> lastMessages;
+
     private int maxClientId = 0;
     private ConcurrentMap<Integer, SocketHandler> connections;
 
     Server(int port) {
         this.port = port;
         this.connections = new ConcurrentHashMap<>();
+
+        lastMessages = new ConcurrentLinkedQueue<>();
     }
 
     void run() throws IOException {
@@ -31,9 +37,9 @@ class Server {
 
             // Process new client
             SocketHandler conn = new SocketHandler(this, cSocket, maxClientId);
+            connections.put(maxClientId, conn);
 
             System.out.println("User#" + conn.getClientId() + " connected");
-            connections.put(maxClientId, conn);
 
             (new Thread(conn)).start();
 
@@ -43,12 +49,24 @@ class Server {
     }
 
     void broadcast(Packet p) {
+        if (p.getType() == Packet.Type.MESSAGE) {
+            lastMessages.add(p);
+
+            if (lastMessages.size() > MESSAGES_LOG) {
+                lastMessages.poll();
+            }
+        }
+
         for (ConcurrentMap.Entry<Integer, SocketHandler> entry : connections.entrySet()) {
             SocketWrapper wrapper = entry.getValue().getWrapper();
             if (wrapper.isActive()) {
                 wrapper.sendPacket(p);
             }
         }
+    }
+
+    public String getGreeting(ClientConnection client) {
+        return "Welcome to test chat!";
     }
 
     void stop() throws IOException {

@@ -1,7 +1,5 @@
 package com.messenger.common;
 
-import org.junit.internal.runners.statements.RunAfters;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -28,12 +26,12 @@ public class SocketWrapper implements Runnable {
     public void run() {
         PacketScanner sc = new PacketScanner(input);
 
-        while (!socket.isClosed()) {
+        while (isActive()) {
             try {
                 Packet p = sc.nextPacket();
-                onPacket.accept(p);
+                handlePacket(p);
             } catch (IOException e) {
-                onError.accept(e);
+                handleError(e);
             }
         }
     }
@@ -46,6 +44,14 @@ public class SocketWrapper implements Runnable {
         onError = fn;
     }
 
+    protected void handlePacket(Packet p) {
+        onPacket.accept(p);
+    }
+
+    protected void handleError(Exception e) {
+        onError.accept(e);
+    }
+
     public void sendPacket(Packet p) {
         try {
             byte[] b = PacketSerializer.serialize(p);
@@ -53,7 +59,7 @@ public class SocketWrapper implements Runnable {
             output.write(b, 0, b.length);
             output.flush();
         } catch (IOException e) {
-            onError.accept(e);
+            handleError(e);
         }
     }
 

@@ -5,6 +5,10 @@ package com.messenger.server;
  */
 public class SystemCommands {
 
+    public static String auth(Server server, ClientConnection client, String[] argv) {
+        return "OK";
+    }
+
     /**
      * Graceful quit from chat
      */

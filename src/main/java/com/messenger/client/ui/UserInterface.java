@@ -2,7 +2,6 @@ package com.messenger.client.ui;
 
 import com.messenger.common.Packet;
 
-import java.io.*;
 import java.util.function.Consumer;
 
 public class UserInterface implements Runnable {
@@ -17,24 +16,49 @@ public class UserInterface implements Runnable {
         gui.init();
     }
 
-    public void printSystemMessage(String msg) throws IOException {
-        gui.printLine("!!! " + msg + " !!!");
+    public void stop() {
+        gui.dispose();
     }
 
-    public void printError(String msg) throws IOException {
-        gui.printLine(msg);
+    public void printSystemMessage(String msg) {
+        gui.printMessage("!!! " + msg + " !!!");
     }
 
-    public void printMessage(Packet msg) throws IOException {
-        gui.printLine(msg.toString());
+    public void printMessage(Packet msg) {
+        gui.printMessage(msg.toString());
+    }
+
+    public void showError(String msg) {
+        gui.showModal("Error: " + msg);
+    }
+
+    public void fatalError(String msg) {
+        gui.printMessage("Fatal error: " + msg);
+        gui.block();
+    }
+
+    public void connected(String nick) {
+        gui.connected(nick);
+    }
+
+    public void quieted() {
+        gui.quieted();
     }
 
     public void onMessageEnter(Consumer<String> fn) {
         gui.onMessageEnter(fn);
     }
 
-    public void stop() {
-        gui.close();
+    public void onNickEnter(Consumer<String> fn) {
+        gui.onNickEnter(fn);
+    }
+
+    public void onQuit(Runnable fn) {
+        gui.onQuit(fn);
+    }
+
+    public void onClose(Runnable fn) {
+        gui.onClose(fn);
     }
 
 }

@@ -6,6 +6,8 @@ import java.util.function.Consumer;
 
 class GuiMiddleware extends Frame {
 
+    private static final String EOL = "\r\n";
+
     private static final String TITLE = "Chat Client";
     private static final int WIDTH = 450;
     private static final int HEIGHT = 600;
@@ -16,16 +18,19 @@ class GuiMiddleware extends Frame {
     };
     private Runnable onQuit = () -> {
     };
+    private Runnable onClose = () -> {
+    };
+
     private Runnable onInputEnter = () -> {
     };
 
-    private Label header;
-    private TextArea display;
+    private Label chatHeader;
+    private TextArea chat;
     private TextField input;
     private Button send, connect, quit;
 
     GuiMiddleware() {
-        display = new TextArea();
+        chat = new TextArea();
         input = new TextField();
 
         send = new Button("Send");
@@ -48,16 +53,67 @@ class GuiMiddleware extends Frame {
         input.requestFocus();
     }
 
-    void printLine(String text) {
-        display.append(text + "\n");
+    void printMessage(String text) {
+        chat.append(text + EOL);
     }
 
-    void close() {
+    void printLog(String text) {
+    }
+
+    void showModal(String text) {
+        Dialog modal = new Dialog(this);
+        Label message = new Label(text, Label.CENTER);
+        modal.add(message);
+        modal.setVisible(true);
+    }
+
+    void connected(String nick) {
+        chatHeader.setText("Nick: " + nick);
+
+        onInputEnter = () -> handleSend(null);
+        input.setEnabled(true);
+        input.requestFocus();
+
+        quit.setEnabled(true);
+        send.setEnabled(true);
+    }
+
+    void quieted() {
+        chatHeader.setText(null);
+        chat.setText(null);
+
+        onInputEnter = () -> handleConnect(null);
+        input.setEnabled(true);
+        input.requestFocus();
+
+        connect.setEnabled(true);
+    }
+
+    void block() {
+        connect.setEnabled(false);
+        quit.setEnabled(false);
+        input.setEnabled(false);
+        send.setEnabled(false);
+    }
+
+    void stop() {
         dispose();
     }
 
     void onMessageEnter(Consumer<String> fn) {
         onMessage = fn;
+    }
+
+    void onNickEnter(Consumer<String> fn) {
+        onNick = fn;
+    }
+
+    void onQuit(Runnable fn) {
+        onQuit = fn;
+    }
+
+    void onClose(Runnable fn) {
+        onClose = fn;
     }
 
     private String flushInput() {
@@ -69,25 +125,30 @@ class GuiMiddleware extends Frame {
     }
 
     private void buildLayout() {
-        header = new Label(null, Label.CENTER);
-        header.setFont(new Font("Helvetica", Font.PLAIN, 14));
+        chatHeader = new Label(null, Label.CENTER);
+        chatHeader.setFont(new Font("Helvetica", Font.PLAIN, 14));
 
-        Panel keys = new Panel();
-        keys.setLayout(new GridLayout(1, 2));
-        keys.add(quit);
-        keys.add(connect);
+        Panel keyControls = new Panel();
+        keyControls.setLayout(new GridLayout(1, 2));
+        keyControls.add(quit);
+        keyControls.add(connect);
 
         Panel actionPanel = new Panel();
         actionPanel.setLayout(new BorderLayout());
-        actionPanel.add("West", keys);
+        actionPanel.add("West", keyControls);
         actionPanel.add("Center", input);
         actionPanel.add("East", send);
 
-        setLayout(new BorderLayout());
-        add("North", header);
-        add("Center", display);
-        add("South", actionPanel);
+        Panel chatPanel = new Panel();
+        chatPanel.setLayout(new BorderLayout());
+        chatPanel.add("North", chatHeader);
+        chatPanel.add("Center", chat);
+        chatPanel.add("South", actionPanel);
 
+        setLayout(new BorderLayout());
+        add("Center", chatPanel);
+
+        chat.setEditable(false);
         quit.setEnabled(false);
         connect.setEnabled(true);
         send.setEnabled(false);
@@ -117,13 +178,13 @@ class GuiMiddleware extends Frame {
     private void handleQuit(ActionEvent e) {
         onInputEnter = () -> handleConnect(null);
 
-        header.setText(null);
-        flushInput();
-        display.setText(null);
-
         quit.setEnabled(false);
-        connect.setEnabled(true);
         send.setEnabled(false);
+
+        input.setEnabled(false);
+        flushInput();
+
+        onQuit.run();
     }
 
     private void handleConnect(ActionEvent e) {
@@ -132,13 +193,10 @@ class GuiMiddleware extends Frame {
             return;
         }
 
-        header.setText("Nick: " + name);
-
-        onInputEnter = () -> handleSend(null);
-
-        quit.setEnabled(true);
         connect.setEnabled(false);
-        send.setEnabled(true);
+        input.setEnabled(false);
+
+        onNick.accept(name);
     }
 
     private void handleSend(ActionEvent e) {
@@ -173,8 +231,23 @@ class GuiMiddleware extends Frame {
     private void setWindowHandlers() {
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent we) {
-                close();
+                onClose.run();
             }
+        });
+
+        chat.addFocusListener(new FocusListener() {
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (input.isEnabled()) {
+                    input.requestFocus();
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+            }
+
         });
     }
 

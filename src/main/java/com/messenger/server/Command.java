@@ -3,6 +3,7 @@ package com.messenger.server;
 import com.messenger.common.Packet;
 
 import java.security.InvalidParameterException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class Command {
 
     private void parsePacketText() {
         // Raw parse of command text
-        String[] parts = packet.getText().substring(1).trim().split("\\w");
+        String[] parts = packet.getText().substring(1).trim().split("\\W");
 
         // Flush old parsed data and set default fallback
         command = "";

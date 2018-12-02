@@ -11,6 +11,7 @@ import java.security.InvalidParameterException;
  * Structure:
  * 4 byte - total length
  * 1 byte - type
+ * 2 byte - local id
  * 8 byte - timestamp
  * 1 byte - emitter length (n)
  * n byte - emitter
@@ -20,8 +21,8 @@ import java.security.InvalidParameterException;
  */
 public class PacketSerializer {
 
-    // total length + type length + timestamp length
-    private static final int PREFIX_SIZE = Integer.BYTES + Byte.BYTES + Long.BYTES;
+    // total length + type length + local_id length + timestamp length
+    private static final int PREFIX_SIZE = Integer.BYTES + Byte.BYTES + Short.BYTES + Long.BYTES;
 
     // PREFIX_SIZE + emitter length + text length
     private static final int MIN_SIZE = PREFIX_SIZE + Byte.BYTES + Short.BYTES;
@@ -50,6 +51,7 @@ public class PacketSerializer {
         ByteBuffer buffer = ByteBuffer.allocate(size)
                 .putInt(size)
                 .put(data.getType().code())
+                .putShort(data.getId())
                 .putLong(data.getTimestamp())
                 .put((byte) emitter.length)
                 .put(emitter)
@@ -73,6 +75,7 @@ public class PacketSerializer {
         }
 
         byte type = dstream.readByte();
+        short id = dstream.readShort();
         long timestamp = dstream.readLong();
 
         byte emitterLen = dstream.readByte();
@@ -81,7 +84,10 @@ public class PacketSerializer {
         short textLen = dstream.readShort();
         String text = readStr(dstream, textLen, true);
 
-        return new Packet(Packet.Type.fromValue(type), text, nick, timestamp);
+        Packet p = new Packet(Packet.Type.fromValue(type), text, nick, timestamp);
+        p.setId(id);
+
+        return p;
     }
 
     static void validatePacketLength(int len) throws InvalidParameterException {

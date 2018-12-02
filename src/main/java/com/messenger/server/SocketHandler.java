@@ -5,6 +5,7 @@ import com.messenger.common.SystemCode;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.security.InvalidParameterException;
 
 public class SocketHandler implements Runnable {
@@ -57,6 +58,13 @@ public class SocketHandler implements Runnable {
                         throw new InvalidParameterException("Unsupported system code received");
                 }
             }
+            if (packet.isCommand()) {
+                // todo: handle
+                Command c = new Command(packet, wrapper);
+                callCommand(c, packet);
+
+                return;
+            }
 
             server.broadcast(packet);
         } catch (Exception e) {
@@ -66,12 +74,33 @@ public class SocketHandler implements Runnable {
 
     private void socketErrorHandler(Exception e) {
         // todo
-        try {
-            wrapper.close();
-        } catch (IOException e1) {
-            e1.printStackTrace();
+        if (e instanceof SocketException) {
+            try {
+                wrapper.drop();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
+        if (e instanceof IOException) {
+            try {
+                wrapper.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+
         e.printStackTrace();
+    }
+
+    String callCommand(Command c, Packet p) throws IOException {
+        if (c.getCommand().equals("auth")) {
+            wrapper.sendPacket(p.respond("OK"));
+        } else {
+            wrapper.sendPacket(p.respond(SystemCode.CLOSE));
+            wrapper.drop();
+        }
+
+        return "";
     }
 
     ClientConnection getWrapper() {
