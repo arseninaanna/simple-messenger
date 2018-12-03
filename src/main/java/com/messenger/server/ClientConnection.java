@@ -9,10 +9,28 @@ import java.net.Socket;
 
 class ClientConnection extends SocketWrapper {
 
-    public String nickname;
+    private String nickname;
 
     ClientConnection(Socket socket) throws IOException {
         super(socket);
+    }
+
+    String getNickname() {
+        return nickname;
+    }
+
+    void setNickname(String nick) {
+        nickname = nick;
+    }
+
+    @Override
+    protected void handlePacket(Packet p) {
+        if (!p.getEmitter().equals(nickname)) {
+            sendPacket(p.respond("Invalid nick"));
+            return;
+        }
+
+        super.handlePacket(p);
     }
 
     @Override

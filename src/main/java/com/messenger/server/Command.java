@@ -3,15 +3,14 @@ package com.messenger.server;
 import com.messenger.common.Packet;
 
 import java.security.InvalidParameterException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Command {
+class Command {
 
     private static final String STR_QUOTE = "`";
 
-    ClientConnection clientConnection;
+    private ClientConnection clientConnection;
     private Packet packet;
 
     private String command; // Command name in lower case
@@ -28,12 +27,20 @@ public class Command {
         parsePacketText();
     }
 
-    public String getCommand() {
+    String getCommand() {
         return command;
     }
 
-    public String[] getParams() {
+    String[] getParams() {
         return params;
+    }
+
+    Packet getPacket() {
+        return packet;
+    }
+
+    ClientConnection getConnection() {
+        return clientConnection;
     }
 
     private void parsePacketText() {

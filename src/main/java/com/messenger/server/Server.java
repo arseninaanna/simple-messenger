@@ -13,8 +13,9 @@ import java.util.concurrent.ConcurrentMap;
 class Server {
 
     private int port;
-
     private ServerSocket sSocket;
+
+    private CommandRegistry commands;
 
     private final static int MESSAGES_LOG = 10;
     private ConcurrentLinkedQueue<Packet> lastMessages;
@@ -25,6 +26,7 @@ class Server {
     Server(int port) {
         this.port = port;
         this.connections = new ConcurrentHashMap<>();
+        this.commands = new CommandRegistry("./plugins");
 
         lastMessages = new ConcurrentLinkedQueue<>();
     }
@@ -65,8 +67,25 @@ class Server {
         }
     }
 
-    public String getGreeting(ClientConnection client) {
-        return "Welcome to test chat!";
+    void execute(Command c) {
+        new Thread(() -> {
+            String response = commands.execute(this, c);
+
+            if (response == null) {
+                c.getConnection().sendPacket(c.getPacket().respond("Command not found"));
+            } else if (response.length() > 0) {
+                c.getConnection().sendPacket(c.getPacket().respond(response));
+            }
+        }).start();
+    }
+
+    public Packet getGreeting(ClientConnection client) {
+        return new Packet(Packet.Type.SERVER, "Welcome to test chat!");
+    }
+
+    public Packet[] getLastMessages() {
+        Packet[] p = new Packet[lastMessages.size()];
+        return lastMessages.toArray(p);
     }
 
     void stop() throws IOException {

@@ -49,7 +49,7 @@ public class SocketHandler implements Runnable {
         try {
             System.out.println("New message: " + packet.getText());
 
-            if (packet.getType() == Packet.Type.SYSTEM) {
+            if (packet.hasType(Packet.Type.SYSTEM)) {
                 switch (SystemCode.fromValue(packet.getText())) {
                     case PING:
                         wrapper.sendPacket(new Packet(SystemCode.PONG));
@@ -58,15 +58,22 @@ public class SocketHandler implements Runnable {
                         throw new InvalidParameterException("Unsupported system code received");
                 }
             }
-            if (packet.isCommand()) {
-                // todo: handle
-                Command c = new Command(packet, wrapper);
-                callCommand(c, packet);
+            if (packet.hasType(Packet.Type.MESSAGE)) {
+                if (packet.isCommand()) {
+                    //server.execute(new Command(packet, wrapper));
+                    callCommand(packet);
+                    return;
+                }
+                if (packet.getEmitter().equals("")) {
+                    wrapper.sendPacket(packet.respond("Authentication is required"));
+                    return;
+                }
 
+                server.broadcast(packet);
                 return;
             }
 
-            server.broadcast(packet);
+            wrapper.sendPacket(packet.respond("Invalid packet type"));
         } catch (Exception e) {
             socketErrorHandler(e);
         }
@@ -92,15 +99,19 @@ public class SocketHandler implements Runnable {
         e.printStackTrace();
     }
 
-    String callCommand(Command c, Packet p) throws IOException {
+    /**
+     * @deprecated
+     */
+    private void callCommand(Packet p) throws IOException {
+        Command c = new Command(p, wrapper);
+
         if (c.getCommand().equals("auth")) {
+            wrapper.setNickname(c.getParams()[0]);
             wrapper.sendPacket(p.respond("OK"));
         } else {
             wrapper.sendPacket(p.respond(SystemCode.CLOSE));
             wrapper.drop();
         }
-
-        return "";
     }
 
     ClientConnection getWrapper() {
