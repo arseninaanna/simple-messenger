@@ -2,6 +2,8 @@ package com.messenger.server;
 
 import com.messenger.common.Packet;
 import com.messenger.common.SystemCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -14,6 +16,7 @@ public class SocketHandler implements Runnable {
 
     private int clientId;
     private Socket socket;
+    private static final Logger logger = LoggerFactory.getLogger(SocketHandler.class);
 
     private ClientConnection wrapper;
 
@@ -31,6 +34,8 @@ public class SocketHandler implements Runnable {
     public void run() {
         try {
             wrapper = new ClientConnection(socket);
+            wrapper.setConnectionId(clientId);
+
             wrapper.onPacket(this::socketPacketHandler);
             wrapper.onError(this::socketErrorHandler);
 
@@ -40,6 +45,7 @@ public class SocketHandler implements Runnable {
                 socket.close();
             } catch (IOException e1) {
                 e1.printStackTrace();
+                logger.error("Unable to close server connection error: {}", e1.toString());
             }
             e.printStackTrace();
         }
@@ -52,6 +58,7 @@ public class SocketHandler implements Runnable {
             if (packet.hasType(Packet.Type.SYSTEM)) {
                 switch (SystemCode.fromValue(packet.getText())) {
                     case PING:
+                        logger.info("PING packet was received from user \"{}\"", wrapper.getNickname());
                         wrapper.sendPacket(new Packet(SystemCode.PONG));
                         return;
                     default:
@@ -60,8 +67,7 @@ public class SocketHandler implements Runnable {
             }
             if (packet.hasType(Packet.Type.MESSAGE)) {
                 if (packet.isCommand()) {
-                    //server.execute(new Command(packet, wrapper));
-                    callCommand(packet);
+                    server.execute(new Command(packet, wrapper));
                     return;
                 }
                 if (packet.getEmitter().equals("")) {
@@ -80,7 +86,13 @@ public class SocketHandler implements Runnable {
     }
 
     private void socketErrorHandler(Exception e) {
-        // todo
+        if (e instanceof IOException && !(e instanceof SocketException)) {
+            try {
+                wrapper.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
         if (e instanceof SocketException) {
             try {
                 wrapper.drop();
@@ -88,30 +100,9 @@ public class SocketHandler implements Runnable {
                 e1.printStackTrace();
             }
         }
-        if (e instanceof IOException) {
-            try {
-                wrapper.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-        }
+        server.removeConnection(clientId);
 
         e.printStackTrace();
-    }
-
-    /**
-     * @deprecated
-     */
-    private void callCommand(Packet p) throws IOException {
-        Command c = new Command(p, wrapper);
-
-        if (c.getCommand().equals("auth")) {
-            wrapper.setNickname(c.getParams()[0]);
-            wrapper.sendPacket(p.respond("OK"));
-        } else {
-            wrapper.sendPacket(p.respond(SystemCode.CLOSE));
-            wrapper.drop();
-        }
     }
 
     ClientConnection getWrapper() {

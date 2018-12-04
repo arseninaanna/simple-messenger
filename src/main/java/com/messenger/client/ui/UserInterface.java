@@ -29,7 +29,7 @@ public class UserInterface implements Runnable {
     }
 
     public void showError(String msg) {
-        gui.showModal("Error: " + msg);
+        gui.showModal("Error message", "Error: " + msg);
     }
 
     public void fatalError(String msg) {

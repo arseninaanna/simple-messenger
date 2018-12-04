@@ -2,10 +2,15 @@ package com.messenger.server;
 
 import com.messenger.common.Packet;
 import com.messenger.common.SocketWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -14,6 +19,7 @@ class Server {
 
     private int port;
     private ServerSocket sSocket;
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
     private CommandRegistry commands;
 
@@ -24,11 +30,14 @@ class Server {
     private ConcurrentMap<Integer, SocketHandler> connections;
 
     Server(int port) {
+        logger.info("Server initialization has started");
         this.port = port;
         this.connections = new ConcurrentHashMap<>();
         this.commands = new CommandRegistry("./plugins");
 
         lastMessages = new ConcurrentLinkedQueue<>();
+
+        logger.info("Server initialization has finished");
     }
 
     void run() throws IOException {
@@ -36,18 +45,21 @@ class Server {
 
         while (!sSocket.isClosed()) {
             Socket cSocket = sSocket.accept();
+            logger.info("Server is running");
 
             // Process new client
             SocketHandler conn = new SocketHandler(this, cSocket, maxClientId);
             connections.put(maxClientId, conn);
 
-            System.out.println("User#" + conn.getClientId() + " connected");
+            logger.info("User#" + conn.getClientId() + " connected");
 
             (new Thread(conn)).start();
 
             // Keep ID unique
             maxClientId++;
         }
+
+        logger.info("Server shut down");
     }
 
     void broadcast(Packet p) {
@@ -68,6 +80,8 @@ class Server {
     }
 
     void execute(Command c) {
+        logger.info("Executing \"{} {}\" command", c.getCommand(), Arrays.toString(c.getParams()));
+
         new Thread(() -> {
             String response = commands.execute(this, c);
 
@@ -85,7 +99,22 @@ class Server {
 
     public Packet[] getLastMessages() {
         Packet[] p = new Packet[lastMessages.size()];
+
         return lastMessages.toArray(p);
+    }
+
+    public void removeConnection(int clientId) {
+        connections.remove(clientId);
+    }
+
+    public List<ClientConnection> getConnections() {
+        LinkedList<ClientConnection> list = new LinkedList<>();
+
+        for (ConcurrentMap.Entry<Integer, SocketHandler> entry : connections.entrySet()) {
+            list.add(entry.getValue().getWrapper());
+        }
+
+        return list;
     }
 
     void stop() throws IOException {

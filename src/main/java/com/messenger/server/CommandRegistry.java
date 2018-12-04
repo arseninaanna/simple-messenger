@@ -1,5 +1,7 @@
 package com.messenger.server;
 
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -20,10 +22,13 @@ class CommandRegistry {
     private String pluginsPath;
 
     private Map<String, Function<String[], String>> commands;
-    private Map<String, TriFunction<Server, ClientConnection, String[], String>> systemCommands;
+    private Map<String, TriFunction<Server, ClientConnection, Command, String>> systemCommands;
 
     CommandRegistry(String pluginsPath) {
         this.pluginsPath = pluginsPath;
+
+        commands = new HashMap<>();
+        systemCommands = new HashMap<>();
 
         loadSystemCommands();
         loadPluginsCommands();
@@ -32,7 +37,7 @@ class CommandRegistry {
     String execute(Server server, Command command) {
         String name = command.getCommand();
         if (systemCommands.containsKey(name)) {
-            String result = systemCommands.get(name).apply(server, command.getConnection(), command.getParams());
+            String result = systemCommands.get(name).apply(server, command.getConnection(), command);
 
             return result == null ? "" : result;
         }
@@ -46,7 +51,20 @@ class CommandRegistry {
     }
 
     private void loadSystemCommands() {
-        // todo
+        Class commandsClass = SystemCommands.class;
+        for (Method method : commandsClass.getDeclaredMethods()) {
+            String name = method.getName();
+            systemCommands.put(name, (Server server, ClientConnection connection, Command command) -> {
+                try {
+                    return (String) method.invoke(null, server, connection, command);
+                } catch (ReflectiveOperationException e) {
+                    e.printStackTrace();
+                    systemCommands.remove(name);
+
+                    return "";
+                }
+            });
+        }
     }
 
     private void loadPluginsCommands() {
