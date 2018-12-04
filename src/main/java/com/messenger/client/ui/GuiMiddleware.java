@@ -99,9 +99,11 @@ class GuiMiddleware extends Frame {
         send.setEnabled(true);
     }
 
-    void quieted() {
-        chatHeader.setText(null);
-        chat.setText(null);
+    void quieted(boolean clear) {
+        if(clear) {
+            chatHeader.setText(null);
+            chat.setText(null);
+        }
 
         quit.setEnabled(false);
         send.setEnabled(false);

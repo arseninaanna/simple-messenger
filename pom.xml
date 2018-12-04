@@ -11,7 +11,6 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.jar>3.1.0</maven.jar>
 
-        <logbackVersion>1.2.3</logbackVersion>
         <slf4jVersion>1.7.25</slf4jVersion>
         <junitVersion>4.12</junitVersion>
     </properties>
@@ -22,13 +21,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>${logbackVersion}</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4jVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <artifactId>slf4j-simple</artifactId>
             <version>${slf4jVersion}</version>
         </dependency>
         <dependency>
@@ -61,6 +60,28 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/config</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/main/config</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>${maven.jar}</version>
                 <configuration>
@@ -69,6 +90,9 @@
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
                         </manifest>
+                        <manifestEntries>
+                            <Class-Path>config/</Class-Path>
+                        </manifestEntries>
                     </archive>
                 </configuration>
 
@@ -92,8 +116,8 @@
                             <classifier>client</classifier>
                             <includes>
                                 <include>**/client/*</include>
+                                <include>**/client/ui/*</include>
                                 <include>**/common/*</include>
-                                <include>org.slf4j</include>
                             </includes>
                             <archive>
                                 <manifest>
@@ -123,14 +147,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
             </plugin>
         </plugins>
     </build>

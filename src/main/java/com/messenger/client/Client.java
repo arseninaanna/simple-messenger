@@ -4,7 +4,6 @@ import com.messenger.client.ui.UserInterface;
 import com.messenger.common.GlobalSettings;
 import com.messenger.common.Packet;
 import com.messenger.common.SystemCode;
-import com.messenger.server.SocketHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +34,10 @@ class Client {
             if (!hasConnection()) {
                 connect();
             }
+            if (!hasConnection()) {
+                ui.connectionFailed();
+                return;
+            }
 
             Packet p = makeMessage("/auth " + n);
             connection.sendPacket(p, (response) -> {
@@ -63,6 +66,9 @@ class Client {
         try {
             startSocket();
             startConnection();
+
+            (new Heartbeat(connection)).start();
+            (new Thread(connection)).start();
         } catch (ConnectException e) {
             ui.fatalError("Failed to connect to server. Is it running?");
         } catch (UnknownHostException e) {
@@ -70,9 +76,6 @@ class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        (new Heartbeat(connection)).start();
-        (new Thread(connection)).start();
     }
 
     private void disconnect(Runnable cb) {

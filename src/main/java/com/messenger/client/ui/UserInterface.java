@@ -42,7 +42,11 @@ public class UserInterface implements Runnable {
     }
 
     public void quieted() {
-        gui.quieted();
+        gui.quieted(true);
+    }
+
+    public void connectionFailed() {
+        gui.quieted(false);
     }
 
     public void onMessageEnter(Consumer<String> fn) {
