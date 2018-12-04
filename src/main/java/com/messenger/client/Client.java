@@ -4,6 +4,8 @@ import com.messenger.client.ui.UserInterface;
 import com.messenger.common.GlobalSettings;
 import com.messenger.common.Packet;
 import com.messenger.common.SystemCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -14,6 +16,8 @@ import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 
 class Client {
+
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     private UserInterface ui;
     private Socket socket;
@@ -27,8 +31,12 @@ class Client {
 
     void run() {
         ui.onNickEnter(n -> {
-            if(!hasConnection()) {
+            if (!hasConnection()) {
                 connect();
+            }
+            if (!hasConnection()) {
+                ui.connectionFailed();
+                return;
             }
 
             Packet p = makeMessage("/auth " + n);
@@ -38,6 +46,7 @@ class Client {
                     nickname = n;
                     ui.connected(n);
                 } else {
+                    System.out.println("Auth response: " + response.getText());
                     ui.quieted();
                     ui.printSystemMessage("Nick `" + n + "` is occupied");
                 }
@@ -57,6 +66,9 @@ class Client {
         try {
             startSocket();
             startConnection();
+
+            (new Heartbeat(connection)).start();
+            (new Thread(connection)).start();
         } catch (ConnectException e) {
             ui.fatalError("Failed to connect to server. Is it running?");
         } catch (UnknownHostException e) {
@@ -64,9 +76,6 @@ class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        (new Heartbeat(connection)).start();
-        (new Thread(connection)).start();
     }
 
     private void disconnect(Runnable cb) {
@@ -121,15 +130,23 @@ class Client {
             try {
                 connection.close();
             } catch (IOException e1) {
+                logger.error("Failed to close connection");
+
                 e1.printStackTrace();
             }
         }
         if (e instanceof SocketException) {
+            logger.error("Connection reset");
+
+            nickname = null;
             ui.quieted();
+            ui.showError("Server " + e.getMessage());
 
             try {
                 connection.close();
             } catch (IOException e1) {
+                logger.error("Failed to close connection");
+
                 e1.printStackTrace();
             }
         }

@@ -60,11 +60,32 @@ class GuiMiddleware extends Frame {
     void printLog(String text) {
     }
 
-    void showModal(String text) {
+    void showModal(String title, String text) {
         Dialog modal = new Dialog(this);
+        modal.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+        modal.setLayout(new BorderLayout());
+        modal.setTitle(title);
+
         Label message = new Label(text, Label.CENTER);
         modal.add(message);
+
+        Rectangle tbounds = this.getBounds();
+        Rectangle bounds = new Rectangle();
+        bounds.setSize(300, 100);
+        bounds.x = (int) (tbounds.x + 0.5 * tbounds.width - 0.5 * bounds.width);
+        bounds.y = (int) (tbounds.y + 0.5 * tbounds.height - 0.5 * bounds.height);
+        modal.setBounds(bounds);
+
+        modal.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                modal.dispose();
+            }
+        });
+
+        modal.setResizable(false);
         modal.setVisible(true);
+        modal.requestFocusInWindow();
     }
 
     void connected(String nick) {
@@ -78,9 +99,14 @@ class GuiMiddleware extends Frame {
         send.setEnabled(true);
     }
 
-    void quieted() {
-        chatHeader.setText(null);
-        chat.setText(null);
+    void quieted(boolean clear) {
+        if(clear) {
+            chatHeader.setText(null);
+            chat.setText(null);
+        }
+
+        quit.setEnabled(false);
+        send.setEnabled(false);
 
         onInputEnter = () -> handleConnect(null);
         input.setEnabled(true);
