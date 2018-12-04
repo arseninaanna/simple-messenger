@@ -8,6 +8,6 @@ maven package
 ## Run
 
 ```bash
-java -jar messenger-0.0.3-client.jar
-java -jar messenger-0.0.3-server.jar
+java -jar messenger-0.1.0-client.jar
+java -jar messenger-0.1.0-server.jar
 ```
